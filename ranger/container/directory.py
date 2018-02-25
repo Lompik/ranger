@@ -346,9 +346,9 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
                     filenames = filelist
                     self.load_content_mtime = mtimelevel(mypath, self.flat)
                 else:
-                    filelist = os.listdir(mypath)
-                    filenames = [mypath + (mypath == '/' and fname or '/' + fname)
-                                 for fname in filelist]
+                    from os import scandir
+                    scanneddir = list(os.scandir(mypath))
+                    filenames = [p.path for p in scanneddir]
                     self.load_content_mtime = os.stat(mypath).st_mtime
 
                 if self.cumulative_size_calculated:
@@ -364,7 +364,7 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
                     else:
                         self.infostring = ' %s' % human_readable(self.size)
                 else:
-                    self.size = len(filelist)
+                    self.size = len(scanneddir)
                     self.infostring = ' %d' % self.size
                 if self.is_link:
                     self.infostring = '->' + self.infostring
@@ -377,20 +377,13 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
                 disk_usage = 0
 
                 has_vcschild = False
-                for name in filenames:
+                for sd in scanneddir:
+                    name = sd.name
                     try:
-                        file_lstat = os_lstat(name)
-                        if file_lstat.st_mode & 0o170000 == 0o120000:
-                            file_stat = os_stat(name)
-                        else:
-                            file_stat = file_lstat
+                        stat = sd.stat()
+                        stats = (stat, stat)
+                        is_a_dir = sd.is_dir()
                     except OSError:
-                        file_lstat = None
-                        file_stat = None
-                    if file_lstat and file_stat:
-                        stats = (file_stat, file_lstat)
-                        is_a_dir = file_stat.st_mode & 0o170000 == 0o040000
-                    else:
                         stats = None
                         is_a_dir = False
 
