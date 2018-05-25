@@ -72,25 +72,7 @@ def accept_file(fobj, filters):
     return True
 
 
-def walklevel(some_dir, level):
-    some_dir = some_dir.rstrip(os.path.sep)
-    followlinks = True if level > 0 else False
-    assert os.path.isdir(some_dir)
-    num_sep = some_dir.count(os.path.sep)
-    for root, dirs, files in os.walk(some_dir, followlinks=followlinks):
-        yield root, dirs, files
-        num_sep_this = root.count(os.path.sep)
-        if level != -1 and num_sep + level <= num_sep_this:
-            del dirs[:]
-
-
-def mtimelevel(path, level):
-    mtime = os.stat(path).st_mtime
-    for dirpath, dirnames, _ in walklevel(path, level):
-        dirlist = [os.path.join("/", dirpath, d) for d in dirnames
-                   if level == -1 or dirpath.count(os.path.sep) - path.count(os.path.sep) <= level]
-        mtime = max(mtime, max([-1] + [os.stat(d).st_mtime for d in dirlist]))
-    return mtime
+from ranger.container.extern_py import walklevel, mtimelevel, mtimelevel_py
 
 
 class InodeFilterConstants(object):  # pylint: disable=too-few-public-methods
@@ -326,6 +308,7 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
         basename_is_rel_to = self.path if self.flat else None
 
         try:  # pylint: disable=too-many-nested-blocks
+            from ranger.container.extern_py import scandir, remove_dots
             if self.runnable:
                 yield
                 mypath = self.path
@@ -334,23 +317,21 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
 
                 if self.flat:
                     filelist = []
-                    for dirpath, dirnames, filenames in walklevel(mypath, self.flat):
-                        dirlist = [
-                            os.path.join("/", dirpath, d)
-                            for d in dirnames
-                            if self.flat == -1
-                            or (dirpath.count(os.path.sep)
-                                - mypath.count(os.path.sep)) <= self.flat
-                        ]
-                        filelist += dirlist
-                        filelist += [os.path.join("/", dirpath, f) for f in filenames]
-                    filenames = filelist
+
+                    for dirpath, dirs, files in walklevel(mypath, self.flat):
+                        filelist += dirs
+                        filelist += files
+                    scanneddir = {d.path: d for d in filelist}
+
                     self.load_content_mtime = mtimelevel(mypath, self.flat)
+                    remove_dots(scanneddir, mypath)
+                    filenames = list(scanneddir.keys())
                 else:
-                    filelist = os.listdir(mypath)
-                    filenames = [mypath + (mypath == '/' and fname or '/' + fname)
-                                 for fname in filelist]
-                    self.load_content_mtime = os.stat(mypath).st_mtime
+                    scanneddir = scandir(mypath)
+
+                    self.load_content_mtime = scanneddir[os.path.join(mypath, ".")].stat().st_mtime
+                    remove_dots(scanneddir, mypath)
+                    filenames = list(scanneddir.keys())
 
                 if self.cumulative_size_calculated:
                     # If self.content_loaded is true, this is not the first
@@ -365,7 +346,7 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
                     else:
                         self.infostring = ' %s' % human_readable(self.size)
                 else:
-                    self.size = len(filelist)
+                    self.size = len(scanneddir)
                     self.infostring = ' %d' % self.size
                 if self.is_link:
                     self.infostring = '->' + self.infostring
@@ -378,23 +359,9 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
                 disk_usage = 0
 
                 has_vcschild = False
-                for name in filenames:
-                    try:
-                        file_lstat = os_lstat(name)
-                        if file_lstat.st_mode & 0o170000 == 0o120000:
-                            file_stat = os_stat(name)
-                        else:
-                            file_stat = file_lstat
-                    except OSError:
-                        file_lstat = None
-                        file_stat = None
-                    if file_lstat and file_stat:
-                        stats = (file_stat, file_lstat)
-                        is_a_dir = file_stat.st_mode & 0o170000 == 0o040000
-                    else:
-                        stats = None
-                        is_a_dir = False
-
+                for name, direntry in scanneddir.items():
+                    stats = (direntry.stat(), direntry.stat())
+                    is_a_dir = direntry.is_dir()
                     if is_a_dir:
                         item = self.fm.get_directory(name, preload=stats, path_is_abs=True,
                                                      basename_is_rel_to=basename_is_rel_to)
@@ -425,7 +392,7 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
 
                     files.append(item)
                     self.percent = 100 * len(files) // len(filenames)
-                    yield
+                del scanneddir
                 self.has_vcschild = has_vcschild
                 self.disk_usage = disk_usage
 
@@ -459,6 +426,7 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
 
         finally:
             self.loading = False
+
             self.fm.signal_emit("finished_loading_dir", directory=self)
             if self.vcs:
                 self.fm.ui.vcsthread.process(self)
