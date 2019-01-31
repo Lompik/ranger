@@ -8,11 +8,16 @@ import pytest
 from ranger.container.bookmarks import Bookmarks
 
 
+class NotValidatedBookmarks(Bookmarks):
+    def _validate(self, value):
+        return True
+
+
 def testbookmarks(tmpdir):
     # Bookmarks point to directory location and allow fast access to
     # 'favorite' directories. They are persisted to a bookmark file, plain text.
     bookmarkfile = tmpdir.join("bookmarkfile")
-    bmstore = Bookmarks(str(bookmarkfile))
+    bmstore = NotValidatedBookmarks(str(bookmarkfile))
 
     # loading an empty bookmark file doesnot crash
     bmstore.load()
@@ -33,7 +38,7 @@ def testbookmarks(tmpdir):
 
     # We can persist bookmarks to disk and restore them from disk
     bmstore.save()
-    secondstore = Bookmarks(str(bookmarkfile))
+    secondstore = NotValidatedBookmarks(str(bookmarkfile))
     secondstore.load()
     assert "'" in secondstore
     assert secondstore["'"] == "the milk"
@@ -56,3 +61,20 @@ def testbookmarks(tmpdir):
         secondstore.update_if_outdated()
     secondstore.update = origupdate
     secondstore.update_if_outdated()
+
+
+def test_bookmark_symlink(tmpdir):
+    # Initialize plain file and symlink paths
+    bookmarkfile_link = tmpdir.join("bookmarkfile")
+    bookmarkfile_orig = tmpdir.join("bookmarkfile.orig")
+
+    # Create symlink pointing towards the original plain file.
+    os.symlink(str(bookmarkfile_orig), str(bookmarkfile_link))
+
+    # Initialize the bookmark file and save the file.
+    bmstore = Bookmarks(str(bookmarkfile_link))
+    bmstore.save()
+
+    # Once saved, the bookmark file should still be a symlink pointing towards the plain file.
+    assert os.path.islink(str(bookmarkfile_link))
+    assert not os.path.islink(str(bookmarkfile_orig))

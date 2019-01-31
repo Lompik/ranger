@@ -1,7 +1,10 @@
-ranger 1.9.1
+ranger 1.9.2
 ============
 
 [![Build Status](https://travis-ci.org/ranger/ranger.svg?branch=master)](https://travis-ci.org/ranger/ranger)
+<a href="https://repology.org/metapackage/ranger/versions">
+  <img src="https://repology.org/badge/latest-versions/ranger.svg" alt="latest packaged version(s)">
+</a>
 
 ranger is a console file manager with VI key bindings.  It provides a
 minimalistic and nice curses interface with a view on the directory hierarchy.
@@ -11,8 +14,8 @@ out which program to use for what file type.
 ![screenshot](https://raw.githubusercontent.com/ranger/ranger-assets/master/screenshots/screenshot.png)
 
 This file describes ranger and how to get it to run.  For instructions on the
-usage, please read the man page.  See `HACKING.md` for development specific
-information.
+usage, please read the man page (`man ranger` in a terminal).  See `HACKING.md`
+for development-specific information.
 
 For configuration, check the files in `ranger/config/` or copy the
 default config to `~/.config/ranger` with `ranger --copy-config`.
@@ -40,12 +43,12 @@ Design Goals
 * An easily maintainable file manager in a high level language
 * A quick way to switch directories and browse the file system
 * Keep it small but useful, do one thing and do it well
-* Console based, with smooth integration into the unix shell
+* Console-based, with smooth integration into the unix shell
 
 
 Features
 --------
-* UTF-8 Support  (if your python copy supports it)
+* UTF-8 Support  (if your Python copy supports it)
 * Multi-column display
 * Preview of the selected file/directory
 * Common file operations (create/chmod/copy/delete/...)
@@ -53,21 +56,22 @@ Features
 * VIM-like console and hotkeys
 * Automatically determine file types and run them with correct programs
 * Change the directory of your shell after exiting ranger
-* Tabs, bookmarks, mouse support
+* Tabs, bookmarks, mouse support...
 
 
 Dependencies
 ------------
 * Python (`>=2.6` or `>=3.1`) with the `curses` module
-  and (optionally) wide-unicode support.
+  and (optionally) wide-unicode support
 * A pager (`less` by default)
 
 Optional:
 
 * The `file` program for determining file types
-* The python module `chardet`, in case of encoding detection problems
-* `sudo` to use the "run as root"-feature
+* The Python module `chardet`, in case of encoding detection problems
+* `sudo` to use the "run as root" feature
 * `w3m` for the `w3mimgdisplay` program to preview images
+* `python-bidi` for correct display of RTL file names (Hebrew, Arabic)
 
 Optional, for enhanced file previews (with `scope.sh`):
 
@@ -75,16 +79,34 @@ Optional, for enhanced file previews (with `scope.sh`):
 * `highlight` or `pygmentize` for syntax highlighting of code
 * `atool`, `bsdtar` and/or `unrar` for previews of archives
 * `lynx`, `w3m` or `elinks` for previews of html pages
-* `pdftotext` or `mutool` for pdf previews
-* `transmission-show` for viewing bit-torrent information
+* `pdftotext` or `mutool` for `pdf` previews
+* `transmission-show` for viewing BitTorrent information
 * `mediainfo` or `exiftool` for viewing information about media files
 * `odt2txt` for OpenDocument text files (`odt`, `ods`, `odp` and `sxw`)
+* `chardet` (Python package) for improved encoding detection of text files
 
 
 Installing
 ----------
 Use the package manager of your operating system to install ranger.
-Note that ranger can be started without installing by simply running `ranger.py`.
+You can also install ranger through PyPI: ```pip install ranger-fm```.
+
+<details>
+  <summary>
+    Check current version:
+    <sub>
+      <a href="https://repology.org/metapackage/ranger/versions">
+        <img src="https://repology.org/badge/tiny-repos/ranger.svg" alt="Packaging status">
+      </a>
+    </sub>
+  </summary>
+  <a href="https://repology.org/metapackage/ranger/versions">
+    <img src="https://repology.org/badge/vertical-allrepos/ranger.svg" alt="Packaging status">
+  </a>
+</details>
+
+### Installing from a clone
+Note that you don't *have* to install ranger; you can simply run `ranger.py`.
 
 To install ranger manually:
 ```
@@ -102,10 +124,10 @@ use to uninstall ranger.
 
 Getting Started
 ---------------
-After starting ranger, you can use the Arrow Keys or `h` `j` `k` `l` to navigate, `Enter`
-to open a file or type `Q` to quit.  The third column shows a preview of the
-current file.  The second is the main column and the first shows the parent
-directory.
+After starting ranger, you can use the Arrow Keys or `h` `j` `k` `l` to
+navigate, `Enter` to open a file or `q` to quit.  The third column shows a
+preview of the current file.  The second is the main column and the first shows
+the parent directory.
 
 Ranger can automatically copy default configuration files to `~/.config/ranger`
 if you run it with the switch `--copy-config=( rc | scope | ... | all )`.

@@ -145,11 +145,6 @@ def main(
             from ranger.ext import curses_interrupt_handler
             curses_interrupt_handler.install_interrupt_handler()
 
-        # Create cache directory
-        if fm.settings.preview_images and fm.settings.use_preview_script:
-            if not os.path.exists(args.cachedir):
-                os.makedirs(args.cachedir)
-
         if not args.clean:
             # Create data directory
             if not os.path.exists(args.datadir):
@@ -363,7 +358,7 @@ def load_settings(  # pylint: disable=too-many-locals,too-many-branches,too-many
 
         # Load custom commands
         def import_file(name, path):  # From https://stackoverflow.com/a/67692
-            # pragma pylint: disable=no-name-in-module,import-error,no-member
+            # pragma pylint: disable=no-name-in-module,import-error,no-member, deprecated-method
             if sys.version_info >= (3, 5):
                 import importlib.util as util
                 spec = util.spec_from_file_location(name, path)
@@ -407,8 +402,15 @@ def load_settings(  # pylint: disable=too-many-locals,too-many-branches,too-many
         except OSError:
             LOG.debug('Unable to access plugin directory: %s', plugindir)
         else:
-            plugins = [p[:-3] for p in plugin_files
-                       if p.endswith('.py') and not p.startswith('_')]
+            plugins = []
+            for path in plugin_files:
+                if not path.startswith('_'):
+                    if path.endswith('.py'):
+                        # remove trailing '.py'
+                        plugins.append(path[:-3])
+                    elif os.path.isdir(os.path.join(plugindir, path)):
+                        plugins.append(path)
+
             if not os.path.exists(fm.confpath('plugins', '__init__.py')):
                 LOG.debug("Creating missing '__init__.py' file in plugin folder")
                 fobj = open(fm.confpath('plugins', '__init__.py'), 'w')

@@ -88,7 +88,11 @@ class Bookmarks(FileManagerAware):
         if key == '`':
             key = "'"
         if key in self.dct:
-            return self.dct[key]
+            value = self.dct[key]
+            if self._validate(value):
+                return value
+            else:
+                raise KeyError("Cannot open bookmark: `%s'!" % key)
         else:
             raise KeyError("Nonexistant Bookmark: `%s'!" % key)
 
@@ -185,7 +189,13 @@ class Bookmarks(FileManagerAware):
             old_perms = os.stat(self.path)
             os.chown(path_new, old_perms.st_uid, old_perms.st_gid)
             os.chmod(path_new, old_perms.st_mode)
-            os.rename(path_new, self.path)
+
+            if os.path.islink(self.path):
+                target_path = os.path.realpath(self.path)
+                os.rename(path_new, target_path)
+            else:
+                os.rename(path_new, self.path)
+
         except OSError as ex:
             self.fm.notify('Bookmarks error: {0}'.format(str(ex)), bad=True)
             return
@@ -223,7 +233,7 @@ class Bookmarks(FileManagerAware):
         for line in fobj:
             if self.load_pattern.match(line):
                 key, value = line[0], line[2:-1]
-                if key in ALLOWED_KEYS and not os.path.isfile(value):
+                if key in ALLOWED_KEYS:
                     dct[key] = self.bookmarktype(value)
         fobj.close()
         return dct
@@ -247,3 +257,6 @@ class Bookmarks(FileManagerAware):
 
     def _update_mtime(self):
         self.last_mtime = self._get_mtime()
+
+    def _validate(self, value):  # pylint: disable=no-self-use
+        return os.path.isdir(str(value))
