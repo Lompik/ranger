@@ -655,7 +655,8 @@ _pystat_fromstructstat(STRUCT_STAT *st)
     return v;
 }
 
-char *PyStructSequence_UnnamedField = "unnamed field";
+//char *PyStructSequence_UnnamedField = "unnamed field";
+PyAPI_DATA(const char * const) PyStructSequence_UnnamedField = "unnamed field";;
 
 PyDoc_STRVAR(stat_result__doc__,
 "stat_result: Result from stat, fstat, or lstat.\n\n\
