@@ -75,8 +75,8 @@ int par_dir_stat(char *dirpath,  struct dirent ***namelist, struct stat **sts){
         unsigned int mask = STATX_BASIC_STATS;
         int ret = mystatx(dirf, (*namelist)[i]->d_name, atflag, mask, &stx);
         if(ret!=0){
-            printf("Error in statx(pardirstat): dir:%s name:%s %d\n", dirpath, (*namelist)[i]->d_name, errno);
-            perror("pardirstat(statx)");
+            //printf("Error in statx(pardirstat): dir:%s name:%s %d\n", dirpath, (*namelist)[i]->d_name, errno);
+            //perror("pardirstat(statx)");
             continue;
         };
 #define set(name) (*sts)[i].st_##name=stx.stx_##name;
@@ -104,7 +104,7 @@ int par_dir_stat(char *dirpath,  struct dirent ***namelist, struct stat **sts){
                    continue;
 
             }
-            printf("Error in statat(pardirstat): dir:%s name:%s %d", dirpath, (*namelist)[i]->d_name, errno);
+            //printf("Error in statat(pardirstat): dir:%s name:%s %d", dirpath, (*namelist)[i]->d_name, errno);
         };
 #endif
     }
@@ -160,7 +160,7 @@ int fts_run(char * const * path, int level, fts_f func, struct fts_data *res){
     FTS *ftsp = fts_open(path, FTS_PHYSICAL | FTS_NOSTAT | FTS_NOCHDIR, NULL);
 
     if (ftsp == NULL) {
-        perror("fts_open");
+        //perror("fts_open");
         return 1;
     }
     FTSENT *entry = fts_read(ftsp);
@@ -170,7 +170,7 @@ int fts_run(char * const * path, int level, fts_f func, struct fts_data *res){
 
 
     if ((fts_close(ftsp)) == -1) {
-        perror("fts_close");
+        //perror("fts_close");
         return 1;
     }
 
