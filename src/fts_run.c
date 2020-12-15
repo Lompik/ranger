@@ -8,18 +8,7 @@
 #include <sys/stat.h>
 #include <sys/fcntl.h>
 #include <sys/syscall.h>
-
-#define AT_STATX_SYNC_TYPE	0x6000
-#define AT_STATX_SYNC_AS_STAT	0x0000
-#define AT_STATX_FORCE_SYNC	0x2000
-#define AT_STATX_DONT_SYNC	0x4000
-
-static __attribute__((unused))
-ssize_t mystatx(int dfd, const char *filename, unsigned flags,
-	      unsigned int mask, struct statx *buffer)
-{
-	return syscall(__NR_statx, dfd, filename, flags, mask, buffer);
-}
+#include <unistd.h>
 #else
 #include <sys/stat.h>
 #include <sys/fcntl.h>
@@ -73,7 +62,7 @@ int par_dir_stat(char *dirpath,  struct dirent ***namelist, struct stat **sts){
         int atflag = AT_SYMLINK_NOFOLLOW;
         atflag |= AT_STATX_DONT_SYNC;
         unsigned int mask = STATX_BASIC_STATS;
-        int ret = mystatx(dirf, (*namelist)[i]->d_name, atflag, mask, &stx);
+        int ret = statx(dirf, (*namelist)[i]->d_name, atflag, mask, &stx);
         if(ret!=0){
             //printf("Error in statx(pardirstat): dir:%s name:%s %d\n", dirpath, (*namelist)[i]->d_name, errno);
             //perror("pardirstat(statx)");
