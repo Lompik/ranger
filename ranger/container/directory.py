@@ -71,26 +71,7 @@ def accept_file(fobj, filters):
             return False
     return True
 
-def walklevel(some_dir, level):
-    some_dir = some_dir.rstrip(os.path.sep)
-    followlinks = level > 0
-    assert os.path.isdir(some_dir)
-    num_sep = some_dir.count(os.path.sep)
-    for root, dirs, files in os.walk(some_dir, followlinks=followlinks):
-        yield root, dirs, files
-        num_sep_this = root.count(os.path.sep)
-        if level != -1 and num_sep + level <= num_sep_this:
-            del dirs[:]
-
-
-def mtimelevel(path, level):
-    mtime = os.stat(path).st_mtime
-    for dirpath, dirnames, _ in walklevel(path, level):
-        dirlist = [os.path.join("/", dirpath, d) for d in dirnames
-                   if level == -1 or dirpath.count(os.path.sep) - path.count(os.path.sep) <= level]
-        mtime = max(mtime, max([-1] + [os.stat(d).st_mtime for d in dirlist]))
-    return mtime
-
+from ranger.container.extern_py import walklevel, mtimelevel, mtimelevel_py
 
 class InodeFilterConstants(object):  # pylint: disable=too-few-public-methods
     DIRS = 'd'
