@@ -69,7 +69,8 @@ class Tab(FileManagerAware, SettingsAware):  # pylint: disable=too-many-instance
 
     def _set_pointer(self, value):
         self._pointer = value
-        self._pointed_obj = self.thisdir.files[self._pointer]
+        if self.thisdir.files is not None and self._pointer < len(self.thisdir.files):
+            self._pointed_obj = self.thisdir.files[self._pointer]
 
     pointer = property(_get_pointer, _set_pointer)
 
@@ -155,6 +156,7 @@ class Tab(FileManagerAware, SettingsAware):  # pylint: disable=too-many-instance
         except OSError:
             return True
         self.path = path
+
         self.thisdir = new_thisdir
 
         self.thisdir.load_content_if_outdated()

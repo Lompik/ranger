@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-import py2_compat
+#import py2_compat
 
 import astroid
 import pylint.testutils
