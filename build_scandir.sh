@@ -1,0 +1,1 @@
+gcc -std=c11 -Wall -Wextra  -Wstrict-aliasing -pedantic -fmax-errors=5 $(pkg-config --libs --cflags python3) -shared -o _scandir.$(python -c 'import sysconfig; print(sysconfig.get_config_vars("SOABI")[0], end="")').so -fopenmp -O3 -fPIC -I/home/lompik/Scripts/GithubRepo/ranger/src ~/Scripts/GithubRepo/ranger/src/dirparstat.c ~/Scripts/GithubRepo/ranger/src/fts_run.c
