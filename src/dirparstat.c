@@ -89,7 +89,8 @@ comment):
 #endif
 
 // _Py_stat_struct is already defined in fileutils.h on Python 3.5+
-#if PY_MAJOR_VERSION < 3 || (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION < 5)
+// _Py_stat_struct is moved to internal in Python 3.11+
+#if PY_MAJOR_VERSION < 3 || (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION < 5) || (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 11)
 #ifdef MS_WINDOWS
 struct _Py_stat_struct {
     unsigned long st_dev;
@@ -656,7 +657,7 @@ _pystat_fromstructstat(STRUCT_STAT *st)
 }
 
 //char *PyStructSequence_UnnamedField = "unnamed field";
-PyAPI_DATA(const char * const) PyStructSequence_UnnamedField = "unnamed field";;
+static char *scandir_unnamed_field = "unnamed field";
 
 PyDoc_STRVAR(stat_result__doc__,
 "stat_result: Result from stat, fstat, or lstat.\n\n\
@@ -677,7 +678,7 @@ static PyStructSequence_Field stat_result_fields[] = {
     {"st_uid",     "user ID of owner"},
     {"st_gid",     "group ID of owner"},
     {"st_size",    "total size, in bytes"},
-    /* The NULL is replaced with PyStructSequence_UnnamedField later. */
+    /* The NULL is replaced with scandir_unnamed_field later. */
     {NULL,         "integer time of last access"},
     {NULL,         "integer time of last modification"},
     {NULL,         "integer time of last change"},
@@ -1289,19 +1290,19 @@ DirEntry_repr(DirEntry *self)
 }
 
 static PyMethodDef DirEntry_methods[] = {
-    {"is_dir", (PyCFunction)DirEntry_is_dir, METH_VARARGS | METH_KEYWORDS,
+    {"is_dir", (PyCFunctionWithKeywords)DirEntry_is_dir, METH_VARARGS | METH_KEYWORDS,
      "return True if the entry is a directory; cached per entry"
     },
-    {"is_file", (PyCFunction)DirEntry_is_file, METH_VARARGS | METH_KEYWORDS,
+    {"is_file", (PyCFunctionWithKeywords)DirEntry_is_file, METH_VARARGS | METH_KEYWORDS,
      "return True if the entry is a file; cached per entry"
     },
-    {"is_symlink", (PyCFunction)DirEntry_py_is_symlink, METH_NOARGS,
+    {"is_symlink", (PyCFunctionWithKeywords)DirEntry_py_is_symlink, METH_NOARGS,
      "return True if the entry is a symbolic link; cached per entry"
     },
-    {"stat", (PyCFunction)DirEntry_stat, METH_VARARGS | METH_KEYWORDS,
+    {"stat", (PyCFunctionWithKeywords)DirEntry_stat, METH_VARARGS | METH_KEYWORDS,
      "return stat_result object for the entry; cached per entry"
     },
-    {"inode", (PyCFunction)DirEntry_inode, METH_NOARGS,
+    {"inode", (PyCFunctionWithKeywords)DirEntry_inode, METH_NOARGS,
      "return inode of the entry; cached per entry",
     },
     {NULL}
@@ -1694,9 +1695,9 @@ init_scandir(void)
     if (!billion)
         INIT_ERROR;
 
-    stat_result_desc.fields[7].name = PyStructSequence_UnnamedField;
-    stat_result_desc.fields[8].name = PyStructSequence_UnnamedField;
-    stat_result_desc.fields[9].name = PyStructSequence_UnnamedField;
+    stat_result_desc.fields[7].name = scandir_unnamed_field;
+    stat_result_desc.fields[8].name = scandir_unnamed_field;
+    stat_result_desc.fields[9].name = scandir_unnamed_field;
     PyStructSequence_InitType(&StatResultType, &stat_result_desc);
     structseq_new = StatResultType.tp_new;
     StatResultType.tp_new = statresult_new;
