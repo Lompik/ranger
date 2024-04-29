@@ -102,6 +102,7 @@ int par_dir_stat(char *dirpath,  struct dirent ***namelist, struct stat **sts){
 }
 
 void ranger_cumsize(FTS *ftsp, FTSENT *entry, struct fts_data *data){
+    (void) ftsp;
     if((entry->fts_info != FTS_NSOK))
         return;
 
@@ -122,7 +123,7 @@ void ranger_cumsize(FTS *ftsp, FTSENT *entry, struct fts_data *data){
 }
 
 void ranger_maxmtime(FTS *ftsp, FTSENT *entry, struct fts_data *data){
-
+    (void) ftsp;
     if(entry->fts_info != FTS_D)
         return;
     int level = data->level;
@@ -145,7 +146,7 @@ void ranger_maxmtime(FTS *ftsp, FTSENT *entry, struct fts_data *data){
 }
 
 int fts_run(char * const * path, int level, fts_f func, struct fts_data *res){
-
+    (void) level;
     FTS *ftsp = fts_open(path, FTS_PHYSICAL | FTS_NOSTAT | FTS_NOCHDIR, NULL);
 
     if (ftsp == NULL) {

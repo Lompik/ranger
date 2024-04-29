@@ -1289,20 +1289,22 @@ DirEntry_repr(DirEntry *self)
 #endif
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
 static PyMethodDef DirEntry_methods[] = {
-    {"is_dir", (PyCFunctionWithKeywords)DirEntry_is_dir, METH_VARARGS | METH_KEYWORDS,
+    {"is_dir", (PyCFunction)DirEntry_is_dir, METH_VARARGS | METH_KEYWORDS,
      "return True if the entry is a directory; cached per entry"
     },
-    {"is_file", (PyCFunctionWithKeywords)DirEntry_is_file, METH_VARARGS | METH_KEYWORDS,
+    {"is_file", (PyCFunction)DirEntry_is_file, METH_VARARGS | METH_KEYWORDS,
      "return True if the entry is a file; cached per entry"
     },
-    {"is_symlink", (PyCFunctionWithKeywords)DirEntry_py_is_symlink, METH_NOARGS,
+    {"is_symlink", (PyCFunction)DirEntry_py_is_symlink, METH_NOARGS,
      "return True if the entry is a symbolic link; cached per entry"
     },
-    {"stat", (PyCFunctionWithKeywords)DirEntry_stat, METH_VARARGS | METH_KEYWORDS,
+    {"stat", (PyCFunction)DirEntry_stat, METH_VARARGS | METH_KEYWORDS,
      "return stat_result object for the entry; cached per entry"
     },
-    {"inode", (PyCFunctionWithKeywords)DirEntry_inode, METH_NOARGS,
+    {"inode", (PyCFunction)DirEntry_inode, METH_NOARGS,
      "return inode of the entry; cached per entry",
     },
     {NULL}
@@ -1310,40 +1312,18 @@ static PyMethodDef DirEntry_methods[] = {
 
 static PyTypeObject DirEntryType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    MODNAME ".DirEntry",                    /* tp_name */
-    sizeof(DirEntry),                       /* tp_basicsize */
-    0,                                      /* tp_itemsize */
-    /* methods */
-    (destructor)DirEntry_dealloc,           /* tp_dealloc */
-    0,                                      /* tp_print */
-    0,                                      /* tp_getattr */
-    0,                                      /* tp_setattr */
-    0,                                      /* tp_compare */
-    (reprfunc)DirEntry_repr,                /* tp_repr */
-    0,                                      /* tp_as_number */
-    0,                                      /* tp_as_sequence */
-    0,                                      /* tp_as_mapping */
-    0,                                      /* tp_hash */
-    0,                                      /* tp_call */
-    0,                                      /* tp_str */
-    0,                                      /* tp_getattro */
-    0,                                      /* tp_setattro */
-    0,                                      /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,                     /* tp_flags */
-    0,                                      /* tp_doc */
-    0,                                      /* tp_traverse */
-    0,                                      /* tp_clear */
-    0,                                      /* tp_richcompare */
-    0,                                      /* tp_weaklistoffset */
-    0,                                      /* tp_iter */
-    0,                                      /* tp_iternext */
-    DirEntry_methods,                       /* tp_methods */
+    .tp_name = MODNAME ".DirEntry",
+    .tp_basicsize = sizeof(DirEntry),
+    .tp_dealloc = (destructor)DirEntry_dealloc,
+    .tp_repr = (reprfunc)DirEntry_repr,                /* tp_repr */
+    .tp_flags = Py_TPFLAGS_DEFAULT,                     /* tp_flags */
+    .tp_methods = DirEntry_methods,                       /* tp_methods */
 #if PY_MAJOR_VERSION < 3 && defined(MS_WINDOWS)
-    NULL,                                   /* tp_members */
-    DirEntry_getset,                        /* tp_getset */
+    .tp_members = NULL,                                   /* tp_members */
+    .tp_getset= DirEntry_getset,                        /* tp_getset */
 #else
-    DirEntry_members,                       /* tp_members */
-    NULL,                                   /* tp_getset */
+    .tp_members = DirEntry_members,                       /* tp_members */
+    .tp_getset= NULL,                                   /* tp_getset */
 #endif
 };
 
@@ -1524,6 +1504,7 @@ error:
 static PyObject *
 pardirstat(PyObject *self, PyObject *args, PyObject *kwargs)
 {
+    (void)self;
     static char *keywords[] = {"path", NULL};
     path_t path;
 
@@ -1582,6 +1563,7 @@ error:
 static PyObject *
 mtimelevel(PyObject *self, PyObject *args, PyObject *kwargs)
 {
+    (void) self;
     static char *keywords[] = {"path", "level", NULL};
     path_t path;
     int level;
@@ -1617,6 +1599,7 @@ error:
 static PyObject *
 get_cumulative_size(PyObject *self, PyObject *args, PyObject *kwargs)
 {
+    (void) self;
     static char *keywords[] = {"path", NULL};
     path_t path;
 
@@ -1659,7 +1642,7 @@ static PyMethodDef scandir_methods[] = {
     {"get_cumulative_size",         (PyCFunction)get_cumulative_size,
                         METH_VARARGS | METH_KEYWORDS,
                         posix_scandir__doc__},
-    {NULL, NULL},
+    {NULL, NULL, 0, 0},
 };
 
 #if PY_MAJOR_VERSION >= 3
