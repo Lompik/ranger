@@ -154,6 +154,7 @@ def copyfile(src, dst):
             try:
                 for done in copyfileobj_range(fsrc, fdst):
                     yield done
+                return
             except OSError:
                 # Return to start of files first, then use old method
                 fsrc.seek(0, 0)
@@ -298,10 +299,11 @@ def move(src, dst, overwrite=False, make_safe_path=get_safe_path):
     """
     real_dst = dst
     if os.path.isdir(dst):
-        if _samefile(src, dst):
+        if _samefile(src, dst) and not os.path.islink(src):
             # We might be on a case insensitive filesystem,
             # perform the rename anyway.
             os.rename(src, dst)
+            yield 0
             return
 
         real_dst = os.path.join(dst, _basename(src))
@@ -309,6 +311,7 @@ def move(src, dst, overwrite=False, make_safe_path=get_safe_path):
         real_dst = make_safe_path(real_dst)
     try:
         os.rename(src, real_dst)
+        yield 0
     except OSError:
         if os.path.isdir(src) and not os.path.islink(src):
             if _destinsrc(src, dst):
