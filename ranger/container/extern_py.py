@@ -6,8 +6,7 @@ import os
 from ctypes import *
 from sys import platform, maxsize
 import sys
-sys.path.append("/tmp")
-import _scandir
+from ranger import _scandir
 
 
 def scandir(path):

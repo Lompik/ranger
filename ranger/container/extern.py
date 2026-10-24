@@ -78,8 +78,7 @@ def scandir(path):
     return res
 
 import sys
-sys.path.append("/tmp")
-import _scandir
+from ranger import _scandir
 def _walk(top, topdown=True, onerror=None, followlinks=False):
     """Like Python 3.5's implementation of os.walk() -- faster than
     the pre-Python 3.5 version as it uses scandir() internally.
